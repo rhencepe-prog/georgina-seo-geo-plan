@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO + GEO Plan — georginadorije.com</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#faf9f7;--surface:#fff;--surface2:#f4f2ef;--border:#e8e4df;
+  --text:#1a1814;--muted:#6b6560;--accent:#7c5c3e;--accent-light:#f0e8df;
+  --geo:#2d5a4e;--seo:#5c3d8f;--seo-bg:#ede8f5;--geo-bg:#dff0e8;
+  --warn:#7a4800;--warn-bg:#fef0d9;
+  --done-bg:#f0fdf4;--done-text:#16a34a;
+  --note-bg:#fffdf7;--note-border:#e8d9b0;--note-focus:#c8a84b;
+  --h:Georgia,'Times New Roman',serif;--b:-apple-system,'Segoe UI',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:var(--b);color:var(--text);line-height:1.65;font-size:15px;}
+
+/* ── MODAL ─────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.modal{background:var(--surface);border-radius:14px;padding:32px;max-width:540px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal h2{font-family:var(--h);font-size:20px;font-weight:normal;margin-bottom:6px;}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.modal label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:5px;margin-top:14px;}
+.modal input[type=text]{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-family:monospace;color:var(--text);background:var(--surface2);}
+.modal input[type=text]:focus{outline:none;border-color:var(--seo);}
+.modal .steps{background:var(--surface2);border-radius:8px;padding:14px 16px;margin:16px 0;font-size:12.5px;color:var(--muted);line-height:1.8;}
+.modal .steps b{color:var(--text);}
+.modal .steps a{color:var(--seo);text-decoration:none;}
+.modal .steps a:hover{text-decoration:underline;}
+.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--seo);color:#fff;}
+.btn-primary:hover{background:#4a2e7a;}
+.btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--border);}
+.btn-danger{background:#fde8e8;color:#c0392b;border:1px solid #f5c0c0;}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:6px;}
+
+/* ── TOP BAR ──────────────────────────── */
+#top-bar{
+  position:sticky;top:0;z-index:100;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 32px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.prog-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+#prog-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+#prog-fill{height:100%;background:linear-gradient(90deg,#7c5c3e,#5c3d8f);border-radius:3px;transition:width .4s;}
+#prog-count{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;min-width:72px;text-align:right;}
+.topbar-sep{color:var(--border);font-size:18px;user-select:none;}
+#sync-status{font-size:11px;white-space:nowrap;padding:3px 10px;border-radius:12px;border:1px solid var(--border);cursor:default;}
+#sync-status.local{color:var(--muted);background:var(--surface2);}
+#sync-status.connected{color:var(--done-text);background:var(--done-bg);border-color:#bbf7d0;}
+#sync-status.syncing{color:#856404;background:#fff3cd;border-color:#fde68a;}
+#sync-status.error{color:#c0392b;background:#fde8e8;border-color:#f5c0c0;}
+.topbar-btn{font-size:11px;color:var(--muted);border:1px solid var(--border);background:var(--surface2);padding:5px 11px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.topbar-btn:hover{background:var(--border);}
+#save-flash{font-size:11px;color:var(--done-text);opacity:0;transition:opacity .3s;white-space:nowrap;}
+#save-flash.show{opacity:1;}
+
+/* ── SITE HEADER ─────────────────────── */
+.site-header{background:var(--surface);border-bottom:1px solid var(--border);padding:28px 40px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+.site-header h1{font-family:var(--h);font-size:22px;font-weight:normal;}
+.site-header p{font-size:13px;color:var(--muted);margin-top:4px;}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;}
+.badge.seo{background:var(--seo-bg);color:var(--seo);}
+.badge.geo{background:var(--geo-bg);color:var(--geo);}
+.badge.warn{background:var(--warn-bg);color:var(--warn);}
+
+/* ── LEGEND ───────────────────────────── */
+.legend-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:11px 40px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);}
+.dot{width:9px;height:9px;border-radius:50%;}
+
+/* ── INTRO ────────────────────────────── */
+.intro-band{background:linear-gradient(135deg,#3d2a1e 0%,#5c3d8f 100%);padding:30px 40px;color:#fff;}
+.intro-band h2{font-family:var(--h);font-size:18px;font-weight:normal;margin-bottom:8px;}
+.intro-band p{font-size:13.5px;opacity:.82;max-width:700px;line-height:1.7;}
+.geo-explain{margin-top:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:13px 17px;font-size:13px;opacity:.9;max-width:700px;}
+
+/* ── MAIN ─────────────────────────────── */
+.main{padding:36px 40px;max-width:1100px;margin:0 auto;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+/* ── GLOBAL GRID ──────────────────────── */
+.global-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:44px;}
+.global-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+.global-card h3{font-size:13.5px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.priority-tag{font-size:10px;background:#fde8e8;color:#c0392b;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap;}
+.quick-tag{font-size:10px;background:#e3f0fa;color:#2980b9;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap;}
+
+/* ── CHECK LIST & NOTES ───────────────── */
+.check-list{list-style:none;}
+.check-list li{
+  border-bottom:1px solid var(--border);
+  padding:5px 0 2px;
+}
+.check-list li:last-child{border-bottom:none;}
+.check-list li.done .task-text{text-decoration:line-through;color:var(--border);}
+.task-row{display:flex;align-items:flex-start;gap:8px;}
+.task-row label{display:flex;align-items:flex-start;gap:9px;cursor:pointer;flex:1;padding:3px 4px;border-radius:4px;}
+.task-row label:hover{background:var(--surface2);}
+/* custom checkbox */
+input[type=checkbox]{
+  appearance:none;-webkit-appearance:none;
+  width:15px;height:15px;min-width:15px;
+  border:1.5px solid var(--border);border-radius:4px;
+  background:var(--surface);cursor:pointer;margin-top:3px;
+  position:relative;transition:all .15s;
+}
+input[type=checkbox]:hover{border-color:var(--seo);}
+input[type=checkbox]:checked{background:var(--seo);border-color:var(--seo);}
+input[type=checkbox]:checked::after{content:'';position:absolute;left:3px;top:0px;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);}
+.task-text{font-size:12.5px;color:var(--muted);line-height:1.5;flex:1;}
+/* note toggle button */
+.note-btn{
+  flex-shrink:0;background:none;border:none;cursor:pointer;
+  font-size:11px;color:#b0aba4;padding:3px 6px;border-radius:4px;
+  white-space:nowrap;transition:all .15s;margin-top:2px;
+}
+.note-btn:hover{background:var(--note-bg);color:var(--warn);border-color:var(--note-border);}
+.note-btn.has-note{color:var(--warn);font-weight:600;}
+/* note area */
+.note-wrap{padding:0 4px 4px 24px;overflow:hidden;max-height:0;transition:max-height .25s ease;}
+.note-wrap.open{max-height:300px;}
+.note-area{
+  width:100%;min-height:48px;resize:vertical;
+  border:1px solid var(--note-border);border-radius:6px;
+  padding:7px 10px;font-size:12px;color:var(--text);
+  background:var(--note-bg);font-family:var(--b);line-height:1.5;
+  transition:border-color .2s,box-shadow .2s;display:block;
+}
+.note-area:focus{outline:none;border-color:var(--note-focus);box-shadow:0 0 0 3px rgba(200,168,75,.15);}
+.note-area::placeholder{color:#c8c0b5;font-style:italic;}
+
+/* ── PAGE CARDS ───────────────────────── */
+.page-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:24px;overflow:hidden;}
+.page-header{padding:14px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--surface2);}
+.page-header-left{display:flex;align-items:center;gap:11px;}
+.page-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.page-title{font-size:14.5px;font-weight:600;}
+.page-url{font-size:11.5px;color:var(--muted);font-family:monospace;}
+.right-pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.page-score{font-size:12px;font-weight:700;padding:3px 11px;border-radius:20px;}
+.score-low{background:#fde8e8;color:#c0392b;}
+.score-med{background:#fff3cd;color:#856404;}
+.score-good{background:#d4edda;color:#155724;}
+.card-prog{font-size:11px;padding:3px 10px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--muted);white-space:nowrap;}
+.card-prog.all-done{background:var(--done-bg);color:var(--done-text);border-color:#bbf7d0;}
+.page-body{display:grid;grid-template-columns:1fr 1fr;}
+.page-col{padding:18px 22px;}
+.page-col+.page-col{border-left:1px solid var(--border);background:#fafdf9;}
+.col-heading{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.col-heading.seo-h{color:var(--seo);border-color:#d5cbf0;}
+.col-heading.geo-h{color:var(--geo);border-color:#b0d9c4;}
+.meta-block{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 13px;margin-bottom:10px;}
+.meta-block .ml{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.meta-block .mv{font-size:12.5px;color:var(--text);line-height:1.5;}
+.meta-block .mv.good{color:#155724;}
+.kw-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.kw{font-size:11.5px;padding:2px 9px;border-radius:14px;border:1px solid var(--border);color:var(--muted);background:var(--surface);}
+.kw.primary{background:var(--seo-bg);color:var(--seo);border-color:#c8bde8;font-weight:500;}
+.cta-note{font-size:12px;background:var(--accent-light);border-left:3px solid var(--accent);padding:9px 13px;border-radius:0 6px 6px 0;color:#5c3d1e;margin-top:12px;line-height:1.5;}
+.schema-badge{display:inline-block;font-size:11px;background:#f0e8ff;color:var(--seo);padding:1px 8px;border-radius:4px;border:1px solid #d5cbf0;font-family:monospace;margin:2px;}
+
+/* ── GEO MASTER ───────────────────────── */
+.geo-master{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:24px;overflow:hidden;}
+.geo-master-header{background:var(--geo);color:#fff;padding:16px 22px;}
+.geo-master-header h2{font-family:var(--h);font-size:17px;font-weight:normal;}
+.geo-master-header p{font-size:12.5px;opacity:.8;margin-top:2px;}
+.geo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;}
+.geo-cell{padding:16px 18px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.geo-cell:nth-child(3n){border-right:none;}
+.geo-cell:nth-last-child(-n+3){border-bottom:none;}
+.geo-cell h4{font-size:12.5px;font-weight:600;color:var(--geo);margin-bottom:8px;}
+
+/* ── BLOG TABLE ───────────────────────── */
+.blog-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.blog-table th{text-align:left;padding:9px 13px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);}
+.blog-table td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:middle;}
+.blog-table tr:last-child td{border-bottom:none;}
+.blog-table tr:hover td{background:var(--surface2);}
+.p-high{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;background:#fde8e8;color:#c0392b;}
+.p-med{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;background:#fff3cd;color:#856404;}
+.blog-note-area{width:100%;min-height:32px;border:1px solid var(--note-border);border-radius:5px;padding:5px 8px;font-size:11.5px;font-family:var(--b);background:var(--note-bg);color:var(--text);resize:vertical;}
+.blog-note-area:focus{outline:none;border-color:var(--note-focus);}
+.blog-note-area::placeholder{color:#c8c0b5;font-style:italic;}
+
+/* ── QW GRID ──────────────────────────── */
+.qw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:44px;}
+.qw-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px 17px;}
+.qw-card .num{font-family:var(--h);font-size:26px;color:var(--border);font-weight:normal;}
+.qw-card h4{font-size:12.5px;font-weight:600;margin:3px 0 7px;color:var(--text);}
+.qw-card p{font-size:11.5px;color:var(--muted);line-height:1.6;}
+
+/* ── SYNC PANEL ───────────────────────── */
+#sync-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;display:none;align-items:center;justify-content:center;}
+#sync-panel-overlay.open{display:flex;}
+.sync-panel{background:var(--surface);border-radius:14px;padding:30px;max-width:560px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+.sync-panel h2{font-family:var(--h);font-size:20px;font-weight:normal;margin-bottom:6px;}
+.sync-panel p.subtitle{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.sync-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:20px;}
+.sync-tab{flex:1;padding:8px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--muted);transition:all .15s;}
+.sync-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:5px;margin-top:14px;}
+.form-input{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--text);background:var(--surface2);}
+.form-input:focus{outline:none;border-color:var(--seo);}
+.form-input.mono{font-family:monospace;}
+.step-box{background:var(--surface2);border-radius:8px;padding:14px 16px;margin:14px 0;font-size:12.5px;color:var(--muted);line-height:1.85;}
+.step-box b{color:var(--text);}
+.step-box a{color:var(--seo);}
+.step-box code{background:var(--border);border-radius:3px;padding:1px 5px;font-size:11.5px;font-family:monospace;}
+
+footer{text-align:center;padding:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);}
+
+@media(max-width:760px){
+  .site-header,.main,.legend-bar,.intro-band{padding-left:20px;padding-right:20px;}
+  .global-grid,.page-body,.geo-grid,.qw-grid{grid-template-columns:1fr;}
+  .page-col+.page-col{border-left:none;border-top:1px solid var(--border);}
+  .geo-cell{border-right:none;}
+  #top-bar{padding:8px 16px;gap:8px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SYNC PANEL ═══════════════════════════════════════════ -->
+<div id="sync-panel-overlay">
+<div class="sync-panel">
+  <h2>🔗 Team Sync Settings</h2>
+  <p class="subtitle">Connect to Firebase so you and your colleague can see each other's edits in real time. Or use Import/Export to share progress manually.</p>
+
+  <div class="sync-tabs">
+    <button class="sync-tab active" onclick="switchTab('firebase')">🔥 Firebase (Real-time)</button>
+    <button class="sync-tab" onclick="switchTab('export')">📤 Export / Import</button>
+  </div>
+
+  <!-- Firebase Tab -->
+  <div class="tab-pane active" id="tab-firebase">
+    <div class="step-box">
+      <b>Free setup — takes about 5 minutes:</b><br>
+      <b>1.</b> Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Create project<br>
+      <b>2.</b> In your project: <b>Build → Realtime Database → Create database</b><br>
+      <b>3.</b> Choose "Start in test mode" → click Enable<br>
+      <b>4.</b> Copy the Database URL — looks like: <code>https://my-project-default-rtdb.firebaseio.com</code><br>
+      <b>5.</b> Paste it below. Share the same URL with your colleague — that's it!
+    </div>
+    <label class="form-label">Your name (shows who made changes)</label>
+    <input type="text" id="firebase-name" class="form-input" placeholder="e.g. Sarah or Georgina">
+    <label class="form-label">Firebase Realtime Database URL</label>
+    <input type="text" id="firebase-url" class="form-input mono" placeholder="https://your-project-default-rtdb.firebaseio.com">
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="connectFirebase()">Connect &amp; Sync</button>
+      <button class="btn btn-secondary" id="disconnect-btn" style="display:none" onclick="disconnectFirebase()">Disconnect</button>
+      <button class="btn btn-secondary" onclick="closeSyncPanel()">Cancel</button>
+    </div>
+    <p id="firebase-error" style="font-size:12px;color:#c0392b;margin-top:10px;display:none;"></p>
+  </div>
+
+  <!-- Export/Import Tab -->
+  <div class="tab-pane" id="tab-export">
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">Export your progress as a JSON file and send it to your colleague. They import it to sync your checks and notes.</p>
+    <div class="modal-btns" style="flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="exportJSON()">📥 Export progress.json</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📤 Import JSON file</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <p style="font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;">⚠️ Import will overwrite your current progress. Export first if you want to keep it.</p>
+  </div>
+</div>
+</div>
+
+<!-- ═══ TOP BAR ═══════════════════════════════════════════════ -->
+<div id="top-bar">
+  <span class="prog-label">Progress</span>
+  <div id="prog-track"><div id="prog-fill" style="width:0%"></div></div>
+  <span id="prog-count">0 / 0</span>
+  <span class="topbar-sep">·</span>
+  <div id="sync-status" class="local" title="Click to set up team sync" onclick="openSyncPanel()" style="cursor:pointer;">💾 Local only</div>
+  <span id="save-flash">✓ Saved</span>
+  <button class="topbar-btn" onclick="openSyncPanel()">⚙ Sync / Share</button>
+  <button class="topbar-btn" onclick="resetAll()">Reset all</button>
+</div>
+
+<!-- ═══ HEADER ════════════════════════════════════════════════ -->
+<header class="site-header">
+  <div>
+    <h1>SEO + GEO Strategy Plan</h1>
+    <p>georginadorije.com — Georgina Dorije · Spiritual Healer &amp; Mentor · Toronto, Canada</p>
+    <div class="badges">
+      <span class="badge seo">Traditional SEO</span>
+      <span class="badge geo">Generative Engine Optimization</span>
+      <span class="badge warn">15 Pages Audited</span>
+    </div>
+  </div>
+  <div style="text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;">Prepared April 2026</div>
+</header>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="dot" style="background:var(--seo)"></div>SEO optimization</div>
+  <div class="legend-item"><div class="dot" style="background:var(--geo)"></div>GEO / AI optimization</div>
+  <div class="legend-item"><div class="dot" style="background:#c0392b"></div>High priority</div>
+  <div class="legend-item" style="margin-left:auto;font-size:12px;color:var(--geo);">✓ Check off tasks · 📝 Click note icon to add notes · Auto-saves to your browser</div>
+</div>
+
+<div class="intro-band">
+  <h2>Strategic Overview</h2>
+  <p>Georgina Dorije serves a global audience of spiritual seekers, lightworkers, and trauma survivors seeking energy healing, mentorship, and soul transformation. The site has strong positioning and authentic testimonials — the SEO and GEO gaps are largely technical and content-structure issues that are highly fixable.</p>
+  <div class="geo-explain"><strong>What is GEO?</strong> Generative Engine Optimization means optimizing your content to appear in and be cited by AI-powered search tools — ChatGPT, Perplexity, Google AI Overviews, Gemini, and Claude. GEO is now as important as traditional Google SEO for service-based businesses.</div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════ GLOBAL ISSUES ═════════════════════ -->
+<div class="section-label">Global Technical &amp; Site-Wide Issues</div>
+<div class="global-grid">
+
+  <div class="global-card">
+    <h3>🔧 Critical Technical Fixes <span class="priority-tag">High Priority</span></h3>
+    <ul class="check-list">
+      <li data-id="gt0"><div class="task-row"><label><input type="checkbox"><span class="task-text">No blog schema markup (Article, BlogPosting) — add to all blog posts</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Missing LocalBusiness schema with Toronto location and service areas</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt2"><div class="task-row"><label><input type="checkbox"><span class="task-text">No Person schema for Georgina Dorije / Georgina Basave entity linking</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Site title tag too generic — "Spiritual Alchemy for Lightworkers" lacks her name</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Image alt text missing on most hero and service images</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt5"><div class="task-row"><label><input type="checkbox"><span class="task-text">No canonical tags confirmed — risk of duplicate content via HTTP/HTTPS or www variants</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gt6"><div class="task-row"><label><input type="checkbox"><span class="task-text">/11-sessions/ URL slug is confusing — rename to /private-sessions/ or /1-1-sessions/</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+    </ul>
+  </div>
+
+  <div class="global-card">
+    <h3>⚡ Quick Wins <span class="quick-tag">Do This Week</span></h3>
+    <ul class="check-list">
+      <li data-id="gq0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Georgina's full name to every page title tag</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Google Business Profile in Toronto — category: "Energy Healer" or "Spiritual Counselor"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ schema (FAQPage) to both the FAQ page and the FAQ section on homepage</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add testimonials with structured Review or Testimonial markup</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Create and submit sitemap.xml if not already done</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Claim YouTube, Instagram, TikTok pages with consistent bio linking back to site</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gq6"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "Toronto energy healer" and "online spiritual mentor" to homepage footer text</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+    </ul>
+  </div>
+
+  <div class="global-card">
+    <h3>🏷 Schema Markup Priority List</h3>
+    <ul class="check-list">
+      <li data-id="gs0"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">Person</span> — name, sameAs (Instagram, YouTube, TikTok), jobTitle, knowsAbout</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs1"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">LocalBusiness</span> — in-person Toronto + online global availability</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs2"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">Service</span> — one per offering (Soul Guidance, Healing Chamber, etc.)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs3"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">FAQPage</span> — homepage FAQ section + /faqs/ page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs4"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">Review</span> — testimonials page (aggregate rating)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs5"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">Article</span> — all blog posts</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gs6"><div class="task-row"><label><input type="checkbox"><span class="task-text"><span class="schema-badge">BreadcrumbList</span> — all inner pages</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+    </ul>
+  </div>
+
+  <div class="global-card">
+    <h3>🔁 Internal Linking Strategy</h3>
+    <ul class="check-list">
+      <li data-id="gl0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each service on the homepage should link directly to its individual service detail page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gl1"><div class="task-row"><label><input type="checkbox"><span class="task-text">About / How I Change Lives should link to all 1:1 session types contextually</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gl2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Every blog post should link to at least one relevant session page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gl3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Testimonials page should link to the service the client used</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gl4"><div class="task-row"><label><input type="checkbox"><span class="task-text">FAQs should link to corresponding service pages</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+      <li data-id="gl5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "Related Services" section to each individual session page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Add notes, links, progress updates..."></textarea></div></li>
+    </ul>
+  </div>
+
+</div><!-- /global-grid -->
+
+<!-- ═══════════════════ PAGE-BY-PAGE ══════════════════════════ -->
+<div class="section-label">Page-by-Page SEO + GEO Plan</div>
+
+<!-- helper macro: page card -->
+<!-- ══ HOMEPAGE ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#f0e8ff">🏠</div><div><div class="page-title">Homepage</div><div class="page-url">georginadorije.com/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-home">0/0</span><span class="page-score score-low">45/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Georgina Dorije | Spiritual Healer &amp; Energy Mentor | Online + Toronto</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Georgina Dorije is a spiritual channel, energy healer, and soul mentor offering 1:1 sessions worldwide. Dissolve blocks, awaken your gifts, and transform your life — online or in Toronto.</div></div>
+      <div class="meta-block"><div class="ml">H1</div><div class="mv good">Spiritual Alchemy &amp; Energy Healing with Georgina Dorije</div></div>
+      <div class="kw-list"><span class="kw primary">spiritual healer online</span><span class="kw primary">energy healing sessions</span><span class="kw primary">Georgina Dorije</span><span class="kw">lightworker mentor</span><span class="kw">energy healer Toronto</span></div>
+      <ul class="check-list">
+        <li data-id="home-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Current title omits her name — update all title tags to include "Georgina Dorije"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">No meta description set — Google auto-generates a poor one. Write custom meta descriptions.</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Toronto + "online worldwide" to hero section for local + global signals</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a short bio paragraph (150+ words) near "Meet Your Guide" section</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Price transparency on homepage is strong — keep all service prices visible</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="home-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a clear one-paragraph "About Georgina" summary — AI engines pull this as the entity definition</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include full name, location (Toronto), modalities, and audience (lightworkers, trauma survivors)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">FAQ section at bottom — add FAQPage schema to help AI engines cite specific answers</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "What is spiritual alchemy?" definitional paragraph — AI engines frequently cite these</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Link to Instagram, YouTube, TikTok from footer with rel="me" for entity verification</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="home-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add sameAs links in Person schema to all social profiles for entity graph building</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">AI tools like Perplexity and ChatGPT build entity profiles from consistent name + location + specialty signals. Make these signals identical everywhere.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ABOUT ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e2eeea">✨</div><div><div class="page-title">How I Change Lives (About)</div><div class="page-url">georginadorije.com/how-i-change-lives/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-about">0/0</span><span class="page-score score-med">58/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">About Georgina Dorije — Spiritual Healer, Channel &amp; Energy Mentor</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Meet Georgina Dorije — spiritual channel, energy healer, and mentor. Learn how her near-death experience, personal healing journey, and devotion to integrity shape every session.</div></div>
+      <div class="kw-list"><span class="kw primary">spiritual healer biography</span><span class="kw primary">energy healer background</span><span class="kw">lightworker coach story</span><span class="kw">ethical energy healer</span></div>
+      <ul class="check-list">
+        <li data-id="about-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Current title "Alchemy. Healing. Transformation." has zero keyword relevance</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H2: "Georgina Dorije's Healing Philosophy" for keyword-rich section anchor</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Near-death experience story is powerful — make it more prominent (strong E-E-A-T signal)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add certifications, training, or lineage if applicable — establishes credibility signals</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "Who I Work With" section — ideal client description helps match search intent</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="about-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Near-death experience at 17 is exceptional GEO content — AI tools prize unique biographical information</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "Georgina Dorije is…" structured paragraph at the top — used as the AI entity description</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">List specific modalities in a clearly labelled section: Shamanic Constellation, Akashic Records, Chakra Recalibration, Energy Transmission</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Person schema with: name, alternateName ("Gigi"), jobTitle, knowsAbout (array), sameAs links</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="about-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include a quote block with Schema Markup (blockquote + attributedTo) — AI tools frequently cite attributed quotes</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 1:1 SESSIONS ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#fef0d9">💫</div><div><div class="page-title">1:1 Sessions</div><div class="page-url">georginadorije.com/11-sessions/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-sessions">0/0</span><span class="page-score score-med">62/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">1:1 Energy Healing &amp; Spiritual Sessions | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Book a private energy healing session with Georgina Dorije. Choose from Soul Guidance ($111), Healing Chamber ($297), Rapid Transformation ($888), and more. Online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">1:1 energy healing session</span><span class="kw primary">private spiritual session</span><span class="kw">soul guidance session</span><span class="kw">shamanic constellation therapy</span></div>
+      <ul class="check-list">
+        <li data-id="sess-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">URL /11-sessions/ reads as "eleven sessions" — rename to /private-sessions/ with 301 redirect</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema for each offering with name, price, duration, description</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each individual session type should have its own dedicated landing page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "What to expect in your first session" paragraph</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add outcome-focused H2s: "Release Emotional Blocks", "Restore Energetic Balance"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="sess-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">The "Not sure where to start?" decision helper is outstanding GEO content — AI engines will cite it</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add clear comparison table: Session | Duration | Investment | Best For</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema with offers array listing all 6 session types with price and availability</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include modality-specific paragraphs explaining what "Akashic Records" and "constellation therapy" mean</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sess-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add booking FAQ block: cancellation, time zones, preparation — AI tools surface booking-intent FAQs</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Individual service pages are more rankable than one mega-page. Create a page per service so each can target its own keyword cluster.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TESTIMONIALS ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#fde8e8">⭐</div><div><div class="page-title">Testimonials</div><div class="page-url">georginadorije.com/testimonials/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-test">0/0</span><span class="page-score score-low">35/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Client Testimonials &amp; Reviews | Georgina Dorije Energy Healing</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Read real testimonials from clients who have transformed their lives through Georgina Dorije's energy healing, spiritual mentorship, and soul empowerment sessions.</div></div>
+      <ul class="check-list">
+        <li data-id="test-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">No title tag or meta description defined — critical for a trust page. Add both immediately.</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">No Review or AggregateRating schema — Google can't show star ratings in search results</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Tag each testimonial with the session used — creates keyword-rich anchor text</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add reviewer's first name, location, and session type visually</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add summary headline: "Over X clients transformed through spiritual healing"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Consider embedding video testimonials — high E-E-A-T and engagement signal</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="test-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">AI engines use testimonial pages to verify credibility when answering "is Georgina Dorije legit?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Review schema: author, reviewBody (first 200 chars), reviewRating, itemReviewed (service name)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add AggregateRating schema with ratingValue and reviewCount — enables star snippets in Google</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Quote specific outcomes ("healed 4 major traumas") — AI surfaces outcome-specific results</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="test-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a brief introductory paragraph about who Georgina works with</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FAQs ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e3f0fa">❓</div><div><div class="page-title">FAQs</div><div class="page-url">georginadorije.com/faqs/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-faqs">0/0</span><span class="page-score score-med">55/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">FAQ — Energy Healing Sessions with Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Common questions about spiritual healing sessions, energy work, preparation, and booking with Georgina Dorije. Online worldwide, in-person in Toronto.</div></div>
+      <ul class="check-list">
+        <li data-id="faqs-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">FAQPage schema not implemented — this is the highest-impact schema for this page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Expand FAQ list — current 5 questions is too thin. Target 20–30 questions</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add question categories: About Sessions, Pricing &amp; Booking, Energy Healing Explained, After Your Session</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each answer should be 3–5 sentences minimum to trigger Google's "People Also Ask" feature</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add: "What is shamanic constellation therapy?", "How does remote energy healing work?", "Is energy healing safe?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="faqs-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">FAQ pages are the #1 most-cited content type by AI search engines — implement FAQPage schema immediately</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Write answers in AI-preferred format: direct statement first, then explanation</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional FAQs for all modalities: Akashic Records, chakra recalibration, Soul Constellation Session</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add comparison FAQ: "What is the difference between the Soul Guidance Session and the Healing Chamber?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="faqs-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each Q&amp;A becomes individually citable by Perplexity, ChatGPT, and Google AI Overviews once schema is applied</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Target 25+ FAQs with detailed answers. This single page, properly structured, could drive 30–40% of organic discovery traffic for educational queries.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOOK NOW ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#d4edda">📅</div><div><div class="page-title">Book Now</div><div class="page-url">georginadorije.com/book-now/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-book">0/0</span><span class="page-score score-low">30/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Book an Energy Healing Session | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Ready to begin your transformation? Book a 1:1 energy healing or spiritual mentorship session with Georgina Dorije. Sessions available online worldwide and in-person in Toronto.</div></div>
+      <ul class="check-list">
+        <li data-id="book-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Booking page has very thin text — add a 100-word "What happens after you book" paragraph</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add all 6 session types as clear booking options with short descriptions and prices</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add trust signals near the booking widget: "Secure booking via Acuity", privacy assurance</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add EventReservation or Service schema pointing to each bookable session</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include timezone info prominently — important for global audience conversion</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="book-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">AI tools often surface booking pages for booking-intent queries ("how to book with Georgina Dorije")</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a brief "First session FAQ" block: 3–4 questions specific to first-time bookers</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Make session prices explicit in visible body text — AI engines don't extract prices from iframes or buttons</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="book-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add timezone availability note — GEO engines use this for "energy healer [timezone]" queries</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTACT ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#f0e8ff">📬</div><div><div class="page-title">Contact</div><div class="page-url">georginadorije.com/contact/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-contact">0/0</span><span class="page-score score-low">28/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Contact Georgina Dorije | Spiritual Healer &amp; Energy Mentor</div></div>
+      <ul class="check-list">
+        <li data-id="cont-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add ContactPoint schema with email, availability, and area served (worldwide + Toronto)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a short "when to contact vs when to book" guide — reduces friction and adds useful text</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Mention in-person Toronto availability — captures local intent</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add response time expectation: "Georgina typically responds within 24–48 hours"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Link to all social channels for alternative contact methods</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="cont-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Ensure Georgina's full name and "Toronto" are visible — local AI queries pull from contact pages</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">ContactPoint schema helps AI assistants surface contact details on "how do I contact Georgina Dorije" queries</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="cont-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add all social profile links with platform names explicit — AI engines build entity profiles from cross-links</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BLOGS ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e2eeea">📝</div><div><div class="page-title">Blogs (Index + Individual Posts)</div><div class="page-url">georginadorije.com/blogs/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-blogs">0/0</span><span class="page-score score-low">25/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Spiritual Healing Blog | Georgina Dorije — Energy, Transformation &amp; Soul Growth</div></div>
+      <ul class="check-list">
+        <li data-id="blog-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Blog appears to have minimal content — this is the biggest missed SEO opportunity on the entire site</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each post needs: title tag, meta description, H1, Article schema, author attribution, publish date, category tag</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Target long-tail clusters: "what is shamanic constellation therapy", "how does energy healing work"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Each post should be minimum 1,000 words — 1,500–2,500 ideal for topic authority</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a prominent author bio block at end of every post (links to About page)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Internal link every post to at least one relevant session booking page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="blog-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Blog posts are the primary content AI engines cite — a strong blog is the most powerful GEO asset on the site</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Write posts in "inverted pyramid" structure: answer the question in the first 2 sentences, then elaborate</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include bold subheadings (H2, H3) that are questions or statements — AI engines use these as citation anchors</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Article schema: headline, author (Person), datePublished, image, keywords, description</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Publish at least 2 posts per month consistently — recency signals matter to AI engine freshness rankings</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="blog-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Syndicate posts to Medium or Substack with canonical back-link for additional authority signal</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GROUP PROGRAMS ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#fef0d9">🌙</div><div><div class="page-title">Group Programs</div><div class="page-url">georginadorije.com/group-programs/</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-group">0/0</span><span class="page-score score-low">22/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Group Spiritual Healing Programs | Georgina Dorije</div></div>
+      <ul class="check-list">
+        <li data-id="grp-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Page appears sparse — needs substantial content about group offerings</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add program names, descriptions, dates/schedule, price, and audience for each group</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Target keywords: "online spiritual group program", "group energy healing", "lightworker community online"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a waitlist form if programs are not currently active — captures leads and signals demand</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Event schema if programs have set dates</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="grp-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"Group spiritual healing program online" has growing search volume — this page can capture it</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "What happens in a group session?" FAQ block specific to this page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include testimonials from group participants specifically — distinct social proof type</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="grp-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Use Course or Event schema depending on program format — AI engines surface structured program listings</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ 6 SERVICE PAGES ═══════════════════════ -->
+<div class="section-label" style="margin-top:44px">Individual Service Page Plans — 6 Session Pages</div>
+
+<!-- ══ SOUL GUIDANCE ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#ede8f5">🔮</div><div><div class="page-title">Soul Guidance Session</div><div class="page-url">georginadorije.com/soul-guidance-session/ · $111 · 45 min</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-sgs">0/0</span><span class="page-score score-med">52/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Soul Guidance Session — Spiritual Clarity &amp; Intuitive Reading | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Feeling stuck, uncertain, or overwhelmed? Book a Soul Guidance Session with Georgina Dorije. A 45-min intuitive session using tarot, oracle, and Akashic perception to bring clarity. $111 online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">soul guidance session online</span><span class="kw primary">intuitive reading session</span><span class="kw primary">Akashic records reading online</span><span class="kw">tarot oracle spiritual session</span></div>
+      <ul class="check-list">
+        <li data-id="sgs-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Page title just "Soul Guidance Session" — add brand name and keyword context</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H1: "Soul Guidance Session — Clarity When You Feel Stuck or Uncertain"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add visible price ($111), duration (45 min), and format (Zoom/online) near the top</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "What outcomes clients report" as a bulleted list — maps to search intent</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add 3-question FAQ: "What is a Soul Guidance Session?", "What tools do you use?", "How do I prepare?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema: name, description, price ($111 USD), duration (PT45M), provider, serviceType</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-s6"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add BreadcrumbList: Home → 1:1 Sessions → Soul Guidance Session</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="sgs-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"Who This Is For" section is excellent GEO content — make it an H2 so it's structurally prominent for AI extraction</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional first paragraph: "A Soul Guidance Session is a 45-minute intuitive session combining tarot, oracle cards, and Akashic perception…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">"What Makes This Different" should be restructured as a FAQ answer block — AI engines cite comparison-style answers</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Mention the $111 price explicitly in paragraph text — AI engines extract prices from visible body text, not CTAs</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add 2–3 short client testimonials specific to this session type</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sgs-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Cross-link to FAQs page and the 1:1 Sessions comparison page</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Target query: "I feel stuck in life and don't know what to do — should I book an intuitive reading?" This page can answer that query and convert in one visit.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEALING CHAMBER ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e2eeea">🌿</div><div><div class="page-title">The Healing Chamber</div><div class="page-url">georginadorije.com/the-healing-chamber/ · $297 · 1 hr</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-hc">0/0</span><span class="page-score score-med">50/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">The Healing Chamber — Energy Healing &amp; Chakra Recalibration | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Feeling heavy, drained, or emotionally disconnected? The Healing Chamber is a 1-hour personalized energy healing session. Clear stagnant energy, recalibrate your chakras, and restore balance. $297 online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">chakra healing session online</span><span class="kw primary">energy clearing session</span><span class="kw">chakra recalibration</span><span class="kw">nervous system healing</span></div>
+      <ul class="check-list">
+        <li data-id="hc-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"The Healing Chamber" is evocative but has no searchable keyword — add keyword subtitle H2</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add subtitle H2: "Personalized Energy Healing When You Feel Heavy, Drained, or Disconnected"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">List all modalities explicitly: chakra recalibration, nervous system support, subconscious imprint release, light body reconnection</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add before/after framing: "Before this session, clients often feel… After, they report…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema with price ($297 USD), duration (PT1H), modalities array, availability</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ: "What is chakra recalibration?", "How is this different from meditation?", "Will I feel different right after?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="hc-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional opening: "The Healing Chamber is a one-hour personalized energy healing session that works directly with your energetic, emotional, and subconscious layers…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">The copy "when insight alone is not enough" is a compelling GEO signal — it positions this distinctly from therapy or coaching</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a 100-word "What is chakra recalibration?" paragraph — AI engines frequently answer this definitional query</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "Frequently Paired With" note linking to the Rapid Transformation Package</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add 2 testimonials from clients who booked this specific session with a specific outcome quoted</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="hc-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Explicitly state Zoom delivery + time zone flexibility — AI engines surface this for "online energy healing with flexible scheduling"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Target queries: "why do I feel so drained and heavy spiritually", "online chakra healing session that actually works", "energy clearing for emotional overwhelm."</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RAPID TRANSFORMATION ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#fef0d9">⚡</div><div><div class="page-title">Rapid Transformation Package</div><div class="page-url">georginadorije.com/rapid-transformation-package/ · $888 · 4 Sessions</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-rtp">0/0</span><span class="page-score score-med">48/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Rapid Transformation Package — 4-Session Energy Healing Program | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Break a recurring pattern in 4 focused sessions with Georgina Dorije. Combines energy healing, intuitive guidance, and subconscious work to create real, lasting change. $888 online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">energy healing package online</span><span class="kw primary">spiritual transformation program</span><span class="kw">break recurring pattern spiritual</span><span class="kw">self-sabotage energy healing</span></div>
+      <ul class="check-list">
+        <li data-id="rtp-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"4-session container" is internal jargon — use "4-session package" in meta copy for searchability</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a visible value breakdown: what each of the 4 sessions focuses on</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H2: "Who Is This Package Right For?" — people search for guidance on sessions vs packages</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Include a comparison note: "The difference between one session and a 4-session container"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema: numberOfSessions: 4, price: $888 USD, duration: ~4 weeks</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ: "How long does each session last?", "Can I do sessions back-to-back?", "What patterns is this best for?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="rtp-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Instagram Reel about self-sabotage ("unresolved power dynamic") is a perfect blog companion — repurpose as a 500-word article and link from here</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional paragraph: "The Rapid Transformation Package is a 4-session energy healing and mentorship container designed to address one recurring pattern at its root…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add direct answer to "how many sessions do I need for energy healing?" — a common AI-answered query</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">"What Makes This Different" should be restructured as a bold-led FAQ answer for better AI extraction</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="rtp-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add specific anonymized client outcome example — outcome specificity is a strong GEO credibility signal</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Highest-revenue-per-client page on the site. A long-form landing page (2,000+ words) with FAQ, testimonials, session breakdown, and comparison to mentorship will significantly outperform the current version.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SOUL FREEDOM CONSTELLATION ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#fde8e8">🌸</div><div><div class="page-title">Soul Freedom Constellation Session</div><div class="page-url">georginadorije.com/soul-freedom-constellation/ · $297 · 1 hr</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-sfc">0/0</span><span class="page-score score-low">44/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Soul Freedom Constellation — Family &amp; Ancestral Pattern Healing | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Break free from inherited family patterns and ancestral dynamics. Georgina Dorije uses constellation work to release lineage blocks and restore your sense of self. $297 online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">family constellation therapy online</span><span class="kw primary">ancestral healing session</span><span class="kw primary">inherited trauma healing</span><span class="kw">lineage healing session</span></div>
+      <ul class="check-list">
+        <li data-id="sfc-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"Constellation" is not widely searched — add supporting keywords: "family patterns", "ancestral trauma", "inherited dynamics" in headings</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional H2: "What Is Constellation Work?" — the #1 question potential clients have before booking</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H2: "Signs Your Pattern May Be Connected to Family or Lineage" — high-intent discovery content</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Explain the difference between individual therapy and constellation work</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema: serviceType "Family Constellation Therapy", price $297 USD, duration PT1H</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ: "Do I need to know my family history?", "Can this be done online?", "Difference between constellation and regression therapy?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="sfc-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"Family constellation therapy" is a high-volume informational query — AI engines actively answer it. Add a definitional paragraph for this term.</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Instagram Reel about lineage ("same relationship dynamic, same financial ceiling…") is a perfect blog post — repurpose and link here</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "How constellation work is different from talk therapy" as a bold-led paragraph — comparison queries are heavily cited by AI engines</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Explicitly name the constellation methodology used — named methodologies help AI engines classify and cite the service correctly</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "What you might experience" section with sensory/emotional descriptions</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sfc-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add 2–3 testimonials from clients who did this specific session mentioning family or ancestral patterns resolved</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Highest educational gap on the site. A "Constellation 101" explainer transforms this from a service page into a resource that ranks for research-phase queries and pre-sells the session.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SPIRITUAL ALCHEMY MENTORSHIP ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e2eeea">🔱</div><div><div class="page-title">Spiritual Alchemy Mentorship</div><div class="page-url">georginadorije.com/spiritual-alchemy-mentorship/ · $3,333 · 12 Weeks</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-sam">0/0</span><span class="page-score score-low">46/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Spiritual Alchemy Mentorship — 12-Week 1:1 Transformation Program | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Georgina Dorije's signature 12-week mentorship for deep, structured spiritual and energetic transformation. Work through core patterns, restore clarity, and step into your highest potential. $3,333 online worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">1:1 spiritual mentorship program</span><span class="kw primary">12-week spiritual transformation</span><span class="kw">deep healing mentorship program</span><span class="kw">lightworker mentorship online</span></div>
+      <ul class="check-list">
+        <li data-id="sam-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">"Spiritual Alchemy Mentorship" is a branded name — add supporting keyword phrases in headings and body text</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a 12-week program overview — even a general arc (clearing → integration → embodiment)</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "What's Included" section: number of sessions, session length, email support, any bonuses</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add an application or inquiry CTA — high-ticket programs work better with "Apply" than direct booking</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service/Course schema: price ($3,333 USD), duration (P12W), numberOfSessions</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ: "Is this right for me?", "What results can I expect in 12 weeks?", "Do you offer a payment plan?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="sam-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">AI engines that answer "best spiritual mentorship programs online" should surface this page — authority signals throughout are key</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add opening definitional paragraph: "The Spiritual Alchemy Mentorship is a 12-week one-on-one program with Georgina Dorije combining energy healing, intuitive mentorship, and subconscious pattern work…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">"No dependency created" and "self-leadership" are powerful differentiators — make these an explicit H2</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add 2–3 long-form testimonials from mentorship alumni with specific before/after outcomes — most important trust signal for a $3,333 program</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "Frequently Asked Questions Before Applying" block — rich FAQ schema content</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="sam-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Consider adding "This mentorship is not for…" section — negative qualification builds trust and improves query matching</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">At $3,333, this page needs to do heavy trust-building work. Every element — testimonials, program structure, clear outcomes, FAQ, and Georgina's story — should be present. Think of this as a full sales page, not a service description.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEEP REMOTE CLEARING ══ -->
+<div class="page-card">
+  <div class="page-header">
+    <div class="page-header-left"><div class="page-icon" style="background:#e3f0fa">🌌</div><div><div class="page-title">Deep Remote Clearing Session</div><div class="page-url">georginadorije.com/deep-remote-clearing-session/ · $333 · Async Remote</div></div></div>
+    <div class="right-pills"><span class="card-prog" id="cp-drc">0/0</span><span class="page-score score-low">40/100</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-col">
+      <div class="col-heading seo-h">SEO Optimization</div>
+      <div class="meta-block"><div class="ml">Title Tag</div><div class="mv good">Deep Remote Clearing Session — Distance Energy Clearing | Georgina Dorije</div></div>
+      <div class="meta-block"><div class="ml">Meta Description</div><div class="mv">Stuck patterns that won't budge? The Deep Remote Clearing Session works directly on your energy system to clear persistent imprints, attachments, and subconscious blocks — no live session required. $333 worldwide.</div></div>
+      <div class="kw-list"><span class="kw primary">remote energy clearing session</span><span class="kw primary">distance healing session online</span><span class="kw">energetic imprint clearing</span><span class="kw">remote healing no live session</span></div>
+      <ul class="check-list">
+        <li data-id="drc-s0"><div class="task-row"><label><input type="checkbox"><span class="task-text">The asynchronous/remote format is the most unique differentiator — make it prominent in H1 and opening paragraph</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-s1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H2: "How Does a Remote Energy Clearing Work?" — the most-searched question for this modality</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-s2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Explain the process flow: how the client books → what Georgina does → when they receive results → what they get after</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-s3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add H2: "When Remote Clearing Works Better Than Live Sessions" — counter-intuitive angle that builds confidence</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-s4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Service schema: serviceType "Remote Energy Clearing", deliveryLeadTime, price $333 USD</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-s5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add FAQ: "Do I need to be awake during the session?", "What do I receive after?", "How is this different from the Healing Chamber?"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+    </div>
+    <div class="page-col">
+      <div class="col-heading geo-h">GEO / AI Engine Optimization</div>
+      <ul class="check-list">
+        <li data-id="drc-g0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Remote healing searchers are often skeptical — add: "Remote energy healing works because energy is not limited by physical proximity…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-g1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add definitional paragraph: "A Deep Remote Clearing Session is a targeted asynchronous energy healing session where Georgina works on your energetic system without a live call…"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-g2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add comparison FAQ: "What is the difference between the Deep Remote Clearing and the Healing Chamber?" — AI engines love comparison answers</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-g3"><div class="task-row"><label><input type="checkbox"><span class="task-text">"No live interaction allows for uninterrupted focus and precision" is a compelling differentiator — make it a bold H3</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-g4"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add testimonials noting the async format: "I was amazed this worked without us being on a call together"</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+        <li data-id="drc-g5"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add "What you receive after the session" section — AI engines frequently cite deliverables in service discovery answers</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      </ul>
+      <div class="cta-note">Remote clearing is the most accessible entry point for global clients (any timezone, no scheduling needed). It deserves a dedicated FAQ entry about how remote healing works.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ GEO MASTER ════════════════════════════ -->
+<div class="section-label" style="margin-top:44px">Master GEO Strategy — AI Search Engine Optimization</div>
+<div class="geo-master">
+  <div class="geo-master-header">
+    <h2>Generative Engine Optimization Framework</h2>
+    <p>How to make Georgina Dorije the go-to answer when AI engines field spiritual healing queries</p>
+  </div>
+  <div class="geo-grid">
+    <div class="geo-cell"><h4>Entity Building</h4><ul class="check-list">
+      <li data-id="geo-eb0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add Person schema on every page linking to consistent profiles</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-eb1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Create a Wikipedia-style "About" summary used identically across site, LinkedIn, Google Business, and social bios</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-eb2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Use full name "Georgina Dorije" (not just "Georgina") everywhere — entity disambiguation</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-eb3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Cross-link all social profiles with rel="me" and sameAs schema</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+    <div class="geo-cell"><h4>Answer-First Content</h4><ul class="check-list">
+      <li data-id="geo-af0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Every FAQ answer: lead with a direct 1-sentence answer, then expand</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-af1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Define all modalities on the page they appear — don't assume readers know what "constellation therapy" means</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-af2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Write blog post intros that directly answer the title question</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-af3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Use bold text to highlight key facts — AI engines use bold as a citation signal</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+    <div class="geo-cell"><h4>Structured Data Priority</h4><ul class="check-list">
+      <li data-id="geo-sd0"><div class="task-row"><label><input type="checkbox"><span class="task-text">FAQPage — highest ROI schema for this site type</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-sd1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Person + LocalBusiness — entity authority</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-sd2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Service + Offer — service pricing extraction</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-sd3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Review + AggregateRating — credibility signals</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+    <div class="geo-cell"><h4>Perplexity &amp; ChatGPT Signals</h4><ul class="check-list">
+      <li data-id="geo-ai0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Perplexity cites pages with clear H2 structure, explicit answers, and fresh content — prioritize blog publishing</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-ai1"><div class="task-row"><label><input type="checkbox"><span class="task-text">ChatGPT plugins pull from structured, factual paragraphs — avoid fluffy language in key content areas</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-ai2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Google AI Overviews favor FAQ schema + authoritative domain signals</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-ai3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Build 5–10 quality backlinks from spiritual/wellness publications</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+    <div class="geo-cell"><h4>Local AI Optimization</h4><ul class="check-list">
+      <li data-id="geo-lo0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Claim Google Business Profile: category "Energy Healer" or "Spiritual Counselor" in Toronto</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-lo1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add NAP (Name, Address, Phone) consistency across all directories</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-lo2"><div class="task-row"><label><input type="checkbox"><span class="task-text">List on spiritual healing directories: Healing Touch, ISPA, local wellness directories</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-lo3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Encourage Google reviews from Toronto-based clients — local AI queries surface GBP reviews</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+    <div class="geo-cell"><h4>Content Freshness Signals</h4><ul class="check-list">
+      <li data-id="geo-fr0"><div class="task-row"><label><input type="checkbox"><span class="task-text">Publish 2 blog posts per month minimum — AI engines weight recent content heavily</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-fr1"><div class="task-row"><label><input type="checkbox"><span class="task-text">Update homepage testimonials quarterly with new client stories</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-fr2"><div class="task-row"><label><input type="checkbox"><span class="task-text">Add a "Last updated" date to key service pages</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+      <li data-id="geo-fr3"><div class="task-row"><label><input type="checkbox"><span class="task-text">Repurpose Instagram Reels content into written blog posts — high-value content already created</span></label><button class="note-btn">📝</button></div><div class="note-wrap"><textarea class="note-area" placeholder="Notes..."></textarea></div></li>
+    </ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ BLOG CALENDAR ═════════════════════════ -->
+<div class="section-label" style="margin-top:44px">Recommended Blog Content Calendar (Next 3 Months)</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:44px;">
+  <table class="blog-table">
+    <thead><tr><th style="width:26%">Post Title</th><th>Primary Keyword</th><th>Target Persona</th><th>Link To</th><th style="width:65px">Priority</th><th style="width:55px;text-align:center">Done</th><th style="width:200px">Notes</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--text);font-weight:500">"What Is Spiritual Alchemy? A Beginner's Guide"</td><td>what is spiritual alchemy</td><td>Curious newcomers</td><td>How I Change Lives, 1:1 Sessions</td><td><span class="p-high">HIGH</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl0"></label></td><td><textarea class="blog-note-area" data-id="bl0" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"Signs You Need an Energy Clearing"</td><td>signs you need energy clearing</td><td>Feeling stuck/drained</td><td>Healing Chamber, Remote Clearing</td><td><span class="p-high">HIGH</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl1"></label></td><td><textarea class="blog-note-area" data-id="bl1" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"How Shamanic Constellation Therapy Works"</td><td>shamanic constellation therapy</td><td>Trauma survivors</td><td>Soul Freedom Constellation</td><td><span class="p-high">HIGH</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl2"></label></td><td><textarea class="blog-note-area" data-id="bl2" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"What Is an Akashic Records Reading?"</td><td>Akashic records reading online</td><td>Spiritually curious</td><td>Soul Guidance Session</td><td><span class="p-high">HIGH</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl3"></label></td><td><textarea class="blog-note-area" data-id="bl3" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"Remote Energy Healing: Does It Really Work?"</td><td>does remote energy healing work</td><td>Skeptical seekers</td><td>Deep Remote Clearing, FAQs</td><td><span class="p-med">MED</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl4"></label></td><td><textarea class="blog-note-area" data-id="bl4" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"How to Prepare for Your First Energy Healing Session"</td><td>preparing for energy healing</td><td>First-time clients</td><td>Book Now, FAQs</td><td><span class="p-med">MED</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl5"></label></td><td><textarea class="blog-note-area" data-id="bl5" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"Breaking Karmic Loops: A Spiritual Guide"</td><td>how to break karmic patterns</td><td>Lightworkers on their path</td><td>Rapid Transformation, Mentorship</td><td><span class="p-med">MED</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl6"></label></td><td><textarea class="blog-note-area" data-id="bl6" placeholder="Notes..."></textarea></td></tr>
+      <tr><td style="color:var(--text);font-weight:500">"The Difference Between Energy Healing and Therapy"</td><td>energy healing vs therapy</td><td>Therapy-familiar seekers</td><td>FAQs, 1:1 Sessions</td><td><span class="p-med">MED</span></td><td style="text-align:center"><label><input type="checkbox" data-id="bl7"></label></td><td><textarea class="blog-note-area" data-id="bl7" placeholder="Notes..."></textarea></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════ QUICK WINS ════════════════════════════ -->
+<div class="section-label">Top 6 Quick Wins — Implement This Week</div>
+<div class="qw-grid">
+  <div class="qw-card"><div class="num">01</div><h4>Add Georgina's name to all title tags</h4><p>Every page title should include "Georgina Dorije" — fastest branded search win. Takes under 30 minutes in WordPress.</p></div>
+  <div class="qw-card"><div class="num">02</div><h4>Write meta descriptions for all 15 pages</h4><p>Currently auto-generated. Custom meta descriptions improve click-through rate by 5–10% on average. Use the copy provided above.</p></div>
+  <div class="qw-card"><div class="num">03</div><h4>Add FAQPage schema to homepage + FAQs</h4><p>Highest-ROI schema for AI citation. Use RankMath or Yoast in WordPress — no coding required.</p></div>
+  <div class="qw-card"><div class="num">04</div><h4>Claim Google Business Profile in Toronto</h4><p>Free, takes 15 minutes. Enables star ratings in Google results for "energy healer Toronto" queries.</p></div>
+  <div class="qw-card"><div class="num">05</div><h4>Add alt text to all images</h4><p>Describe each image naturally: "Georgina Dorije spiritual healer in session" — improves accessibility and image search visibility.</p></div>
+  <div class="qw-card"><div class="num">06</div><h4>Create the first blog post</h4><p>Publish "What Is Spiritual Alchemy?" (1,500 words) targeting the top organic search keyword. The blog is the biggest untapped traffic channel.</p></div>
+</div>
+
+</div><!-- /main -->
+<footer>SEO + GEO Strategy Plan for georginadorije.com · Georgina Dorije · Spiritual Healer &amp; Mentor · Prepared April 2026<br>
+<span style="font-size:11px;opacity:.7;">Progress and notes auto-save to your browser · Use ⚙ Sync / Share in the top bar to collaborate with your team</span></footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+const STORE = 'gd_seo_v3';
+let state = { checks:{}, notes:{} };
+let fbDb = null;
+let fbRef = null;
+let userName = 'Team';
+let ignoreRemote = false;
+let saveTimer = null;
+let flashTimer = null;
+
+// ── Card → progress pill mapping ──────────────────────────────────
+const cardMap = {
+  'cp-home':    ['home-s0','home-s1','home-s2','home-s3','home-s4','home-g0','home-g1','home-g2','home-g3','home-g4','home-g5'],
+  'cp-about':   ['about-s0','about-s1','about-s2','about-s3','about-s4','about-g0','about-g1','about-g2','about-g3','about-g4'],
+  'cp-sessions':['sess-s0','sess-s1','sess-s2','sess-s3','sess-s4','sess-g0','sess-g1','sess-g2','sess-g3','sess-g4'],
+  'cp-test':    ['test-s0','test-s1','test-s2','test-s3','test-s4','test-s5','test-g0','test-g1','test-g2','test-g3','test-g4'],
+  'cp-faqs':    ['faqs-s0','faqs-s1','faqs-s2','faqs-s3','faqs-s4','faqs-g0','faqs-g1','faqs-g2','faqs-g3','faqs-g4'],
+  'cp-book':    ['book-s0','book-s1','book-s2','book-s3','book-s4','book-g0','book-g1','book-g2','book-g3'],
+  'cp-contact': ['cont-s0','cont-s1','cont-s2','cont-s3','cont-s4','cont-g0','cont-g1','cont-g2'],
+  'cp-blogs':   ['blog-s0','blog-s1','blog-s2','blog-s3','blog-s4','blog-s5','blog-g0','blog-g1','blog-g2','blog-g3','blog-g4','blog-g5'],
+  'cp-group':   ['grp-s0','grp-s1','grp-s2','grp-s3','grp-s4','grp-g0','grp-g1','grp-g2','grp-g3'],
+  'cp-sgs':     ['sgs-s0','sgs-s1','sgs-s2','sgs-s3','sgs-s4','sgs-s5','sgs-s6','sgs-g0','sgs-g1','sgs-g2','sgs-g3','sgs-g4','sgs-g5'],
+  'cp-hc':      ['hc-s0','hc-s1','hc-s2','hc-s3','hc-s4','hc-s5','hc-g0','hc-g1','hc-g2','hc-g3','hc-g4','hc-g5'],
+  'cp-rtp':     ['rtp-s0','rtp-s1','rtp-s2','rtp-s3','rtp-s4','rtp-s5','rtp-g0','rtp-g1','rtp-g2','rtp-g3','rtp-g4'],
+  'cp-sfc':     ['sfc-s0','sfc-s1','sfc-s2','sfc-s3','sfc-s4','sfc-s5','sfc-g0','sfc-g1','sfc-g2','sfc-g3','sfc-g4','sfc-g5'],
+  'cp-sam':     ['sam-s0','sam-s1','sam-s2','sam-s3','sam-s4','sam-s5','sam-g0','sam-g1','sam-g2','sam-g3','sam-g4','sam-g5'],
+  'cp-drc':     ['drc-s0','drc-s1','drc-s2','drc-s3','drc-s4','drc-s5','drc-g0','drc-g1','drc-g2','drc-g3','drc-g4','drc-g5'],
+};
+
+// ══════════════════════════════════════════════════════════════════
+// PERSISTENCE — localStorage
+// ══════════════════════════════════════════════════════════════════
+function loadLocal(){
+  try{ const s=localStorage.getItem(STORE); if(s) state=JSON.parse(s); }catch(e){}
+}
+function saveLocal(){
+  try{ localStorage.setItem(STORE,JSON.stringify(state)); }catch(e){}
+}
+function flashSaved(msg='✓ Saved'){
+  const el=document.getElementById('save-flash');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════════════════
+function connectFirebase(){
+  const url=document.getElementById('firebase-url').value.trim();
+  const name=document.getElementById('firebase-name').value.trim()||'Team';
+  if(!url){showFbError('Please enter your Firebase Database URL.');return;}
+  if(!url.startsWith('https://')){showFbError('URL should start with https://');return;}
+  userName=name;
+  try{
+    // init or reuse
+    if(!firebase.apps.length){
+      firebase.initializeApp({ databaseURL: url });
+    }
+    fbDb=firebase.database();
+    fbRef=fbDb.ref('seo-plan/georgina');
+    // listen for remote changes
+    fbRef.on('value', snap=>{
+      if(ignoreRemote) return;
+      const remote=snap.val();
+      if(!remote) return;
+      // merge remote into local state
+      if(remote.checks) Object.assign(state.checks, remote.checks);
+      if(remote.notes)  Object.assign(state.notes,  remote.notes);
+      applyStateToUI();
+      saveLocal();
+    }, err=>{
+      setSyncStatus('error','⚠ Sync error');
+    });
+    // save config
+    localStorage.setItem('gd_fb_url', url);
+    localStorage.setItem('gd_fb_name', name);
+    setSyncStatus('connected','🟢 Synced');
+    document.getElementById('disconnect-btn').style.display='';
+    closeSyncPanel();
+    flashSaved('✓ Connected!');
+  }catch(e){
+    showFbError('Connection failed: '+e.message);
+  }
+}
+function disconnectFirebase(){
+  if(fbRef) fbRef.off();
+  fbRef=null; fbDb=null;
+  try{ firebase.app().delete(); }catch(e){}
+  localStorage.removeItem('gd_fb_url');
+  localStorage.removeItem('gd_fb_name');
+  setSyncStatus('local','💾 Local only');
+  document.getElementById('disconnect-btn').style.display='none';
+  closeSyncPanel();
+  flashSaved('Disconnected — saving locally');
+}
+function pushToFirebase(){
+  if(!fbRef) return;
+  ignoreRemote=true;
+  fbRef.set({ checks:state.checks, notes:state.notes, updatedBy:userName, updatedAt:Date.now() })
+    .then(()=>{ setSyncStatus('connected','🟢 Synced'); })
+    .catch(()=>{ setSyncStatus('error','⚠ Sync error'); });
+  setTimeout(()=>{ ignoreRemote=false; },800);
+}
+function setSyncStatus(cls,txt){
+  const el=document.getElementById('sync-status');
+  el.className=cls; el.textContent=txt;
+}
+function showFbError(msg){
+  const el=document.getElementById('firebase-error');
+  el.textContent=msg; el.style.display='block';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AUTO-SAVE (debounced)
+// ══════════════════════════════════════════════════════════════════
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    saveLocal();
+    if(fbRef) pushToFirebase();
+    flashSaved();
+  },600);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI — CHECKBOXES
+// ══════════════════════════════════════════════════════════════════
+function onCheck(id, checked){
+  state.checks[id]=checked;
+  const li=document.querySelector(`li[data-id="${id}"]`);
+  if(li) li.classList.toggle('done', checked);
+  updateCardProgress(id);
+  updateGlobalProgress();
+  scheduleSave();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI — NOTES
+// ══════════════════════════════════════════════════════════════════
+function toggleNote(btn){
+  const wrap=btn.closest('.task-row').nextElementSibling;
+  const isOpen=wrap.classList.contains('open');
+  if(!isOpen){
+    wrap.classList.add('open');
+    wrap.querySelector('.note-area').focus();
+    btn.textContent='🗒';
+  } else {
+    wrap.classList.remove('open');
+    btn.textContent= btn.classList.contains('has-note') ? '🗒' : '📝';
+  }
+}
+function onNoteInput(id, val, btn){
+  state.notes[id]=val;
+  if(val.trim()){
+    btn.classList.add('has-note');
+    btn.textContent='🗒';
+  } else {
+    btn.classList.remove('has-note');
+    btn.textContent='📝';
+  }
+  scheduleSave();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI — PROGRESS
+// ══════════════════════════════════════════════════════════════════
+function updateCardProgress(changedId){
+  for(const [cpId, ids] of Object.entries(cardMap)){
+    if(ids.includes(changedId)){
+      const done=ids.filter(id=>state.checks[id]).length;
+      const el=document.getElementById(cpId);
+      if(el){
+        el.textContent=`${done}/${ids.length} done`;
+        el.classList.toggle('all-done', done===ids.length);
+      }
+    }
+  }
+}
+function updateAllCardProgress(){
+  for(const [cpId, ids] of Object.entries(cardMap)){
+    const done=ids.filter(id=>state.checks[id]).length;
+    const el=document.getElementById(cpId);
+    if(el){
+      el.textContent=`${done}/${ids.length} done`;
+      el.classList.toggle('all-done', done===ids.length);
+    }
+  }
+}
+function updateGlobalProgress(){
+  const cbs=document.querySelectorAll('input[type=checkbox][data-id]');
+  const total=cbs.length;
+  const done=[...cbs].filter(cb=>cb.checked).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-count').textContent=`${done} / ${total} done`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// APPLY STATE TO UI
+// ══════════════════════════════════════════════════════════════════
+function applyStateToUI(){
+  // checkboxes
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb=>{
+    const id=cb.dataset.id;
+    cb.checked=!!state.checks[id];
+    const li=cb.closest('li[data-id]');
+    if(li) li.classList.toggle('done', cb.checked);
+  });
+  // notes
+  document.querySelectorAll('.note-area[data-id], .blog-note-area[data-id]').forEach(ta=>{
+    const id=ta.dataset.id;
+    const val=state.notes[id]||'';
+    ta.value=val;
+    if(val){
+      // find associated btn
+      const btn=ta.closest('.note-wrap')?.previousElementSibling?.querySelector('.note-btn');
+      if(btn){btn.classList.add('has-note');btn.textContent='🗒';ta.closest('.note-wrap').classList.add('open');}
+    }
+    autoResize(ta);
+  });
+  updateAllCardProgress();
+  updateGlobalProgress();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════════════════════════════
+function resetAll(){
+  if(!confirm('Reset all checkboxes and notes? This cannot be undone.')) return;
+  state={checks:{},notes:{}};
+  saveLocal();
+  if(fbRef) pushToFirebase();
+  applyStateToUI();
+  flashSaved('✓ Reset');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════════════════════
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='seo-geo-progress.json';
+  a.click();
+}
+function importJSON(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const imported=JSON.parse(ev.target.result);
+      if(imported.checks||imported.notes){
+        state=imported;
+        saveLocal();
+        if(fbRef) pushToFirebase();
+        applyStateToUI();
+        closeSyncPanel();
+        flashSaved('✓ Imported!');
+      } else { alert('Invalid file format.'); }
+    }catch(err){ alert('Could not read file: '+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SYNC PANEL
+// ══════════════════════════════════════════════════════════════════
+function openSyncPanel(){
+  document.getElementById('sync-panel-overlay').classList.add('open');
+  // prefill saved values
+  const savedUrl=localStorage.getItem('gd_fb_url')||'';
+  const savedName=localStorage.getItem('gd_fb_name')||'';
+  document.getElementById('firebase-url').value=savedUrl;
+  document.getElementById('firebase-name').value=savedName;
+  document.getElementById('firebase-error').style.display='none';
+  document.getElementById('disconnect-btn').style.display=fbRef?'':'none';
+}
+function closeSyncPanel(){
+  document.getElementById('sync-panel-overlay').classList.remove('open');
+}
+function switchTab(tab){
+  document.querySelectorAll('.sync-tab').forEach((t,i)=>{
+    t.classList.toggle('active', (i===0&&tab==='firebase')||(i===1&&tab==='export'));
+  });
+  document.getElementById('tab-firebase').classList.toggle('active', tab==='firebase');
+  document.getElementById('tab-export').classList.toggle('active', tab==='export');
+}
+// close on overlay click
+document.getElementById('sync-panel-overlay').addEventListener('click',e=>{
+  if(e.target===e.currentTarget) closeSyncPanel();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// TEXTAREA AUTO-RESIZE
+// ══════════════════════════════════════════════════════════════════
+function autoResize(ta){
+  ta.style.height='auto';
+  ta.style.height=Math.max(40,ta.scrollHeight)+'px';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WIRE UP EVENTS
+// ══════════════════════════════════════════════════════════════════
+function wireEvents(){
+  // checkboxes
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb=>{
+    cb.addEventListener('change',()=>onCheck(cb.dataset.id, cb.checked));
+  });
+  // note toggle buttons
+  document.querySelectorAll('.note-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>toggleNote(btn));
+  });
+  // inline note textareas
+  document.querySelectorAll('.note-area').forEach(ta=>{
+    const li=ta.closest('li[data-id]');
+    const id=li?li.dataset.id:null;
+    const btn=ta.closest('.note-wrap')?.previousElementSibling?.querySelector('.note-btn');
+    if(!id) return;
+    ta.addEventListener('input',()=>{ autoResize(ta); onNoteInput(id,ta.value,btn); });
+  });
+  // blog note textareas
+  document.querySelectorAll('.blog-note-area').forEach(ta=>{
+    const id=ta.dataset.id;
+    ta.addEventListener('input',()=>{
+      autoResize(ta);
+      state.notes['blog-note-'+id]=ta.value;
+      scheduleSave();
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  loadLocal();
+  wireEvents();
+  applyStateToUI();
+
+  // also load blog note textareas (separate key)
+  document.querySelectorAll('.blog-note-area').forEach(ta=>{
+    const id='blog-note-'+ta.dataset.id;
+    ta.value=state.notes[id]||'';
+    autoResize(ta);
+  });
+
+  // auto-reconnect Firebase if previously set up
+  const savedUrl=localStorage.getItem('gd_fb_url');
+  const savedName=localStorage.getItem('gd_fb_name');
+  if(savedUrl){
+    document.getElementById('firebase-url').value=savedUrl;
+    document.getElementById('firebase-name').value=savedName||'Team';
+    setSyncStatus('syncing','↻ Connecting...');
+    setTimeout(connectFirebase,500);
+  }
+});
+</script>
+</body>
+</html>
